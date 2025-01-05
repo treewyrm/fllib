@@ -43,8 +43,6 @@ const atCurve = (keyframes: Keyframe<VectorLike>[], time: number, flags: WrapFla
 
     if (key > last.key) key = first.key
 
-    console.log(time, key, count)
-
     const value = getHermiteValueAt(keyframes, key)
     if (isNaN(value)) return undefined
 

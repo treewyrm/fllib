@@ -21,6 +21,7 @@
     "./examples/**/*.ts"
   ],
   "exclude": [
+    "./dist",
     "./examples/**/*.ts"
   ]
 }

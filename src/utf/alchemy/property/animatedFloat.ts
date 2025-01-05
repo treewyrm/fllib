@@ -12,7 +12,7 @@ export type AnimatedFloat = KeyframeProperty<number> & {
 
 const getFloatValueAt = (keyframes: Iterable<Keyframe<number>>, key: number, ease?: (t: number) => number): number => {
     const [weight, start, end] = Animation.at(keyframes, key)
-    if (!start || !end) return NaN
+    if (start === undefined || end === undefined) return NaN
 
     return Scalar.linear(ease?.(weight) ?? weight, start, end)
 }

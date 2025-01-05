@@ -44,7 +44,7 @@ describe('UTF directory', () => {
         notStrictEqual((b = root.setDirectory('B')), undefined)
 
         deepStrictEqual(
-            [...root],
+            [...root.objects()],
             [
                 ['A', a],
                 ['B', b],

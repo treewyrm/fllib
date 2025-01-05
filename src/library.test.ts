@@ -23,5 +23,5 @@ describe('Library class', () => {
     it('Deleting first item', () => strictEqual(things.delete('MyThing1'), true))
     it('Size is 1', () => strictEqual(things.size, 1))
 
-    it('Reverse lookup', () => deepStrictEqual([...things], [['MyThing2', otherThing]]))
+    it('Reverse lookup', () => deepStrictEqual([...things.objects()], [['MyThing2', otherThing]]))
 })

@@ -2,10 +2,20 @@
   "name": "fllib",
   "version": "0.0.1",
   "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test dist/**/*.test.js",
+    "test:tsx": "node --import tsx --test src/**/*.test.ts"
+  },
+  "engines": {
+    "node": ">=21.0.0"
+  },
   "devDependencies": {
     "@types/node": "^22.10.1",
     "prettier": "^3.4.2",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   },
   "exports": {
