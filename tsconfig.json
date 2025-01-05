@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "Node16",
+    "moduleResolution": "node16",
+    "rootDir": "./src",
+    "declaration": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": false,
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "./src/**/*.ts",
+    "./examples/**/*.ts"
+  ],
+  "exclude": [
+    "./examples/**/*.ts"
+  ]
+}
