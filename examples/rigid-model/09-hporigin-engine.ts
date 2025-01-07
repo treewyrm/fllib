@@ -48,8 +48,7 @@ async function process(filename: string): Promise<void> {
     // Read rigid model from UTF.
     const model = Rigid.load(root)
 
-    const hardpoint = new Fixed()
-    hardpoint.position = getOrigin(model)
+    const hardpoint = new Fixed(getOrigin(model))
 
     // Adds HpOrigin hardpoint to root part or part itself.
     model.isCompound
@@ -58,10 +57,7 @@ async function process(filename: string): Promise<void> {
 
     const transform = findEngine(model)
     if (transform) {
-        const hardpoint = new Fixed()
-
-        hardpoint.position = Vector.copy(transform.position)
-        hardpoint.orientation = Quaternion.copy(transform.orientation)
+        const hardpoint = new Fixed(transform.position, transform.orientation)
 
         // Adds HpEngineInternal hardpoint to root part or part itself (a bit redundant).
         model.isCompound

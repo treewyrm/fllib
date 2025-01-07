@@ -1,10 +1,11 @@
-import Library from '../../library.js'
 import { type ReadableDirectory, type WritableDirectory } from '../../types.js'
+import Library from '../../library.js'
 import Fixed from './fixed.js'
 import Revolute from './revolute.js'
+import Prismatic from './prismatic.js'
 
-export default class HardpointLibrary extends Library<Fixed | Revolute> {
-    static readonly types = [Fixed, Revolute] as const
+export default class HardpointLibrary extends Library<Fixed | Revolute | Prismatic> {
+    static readonly types = [Fixed, Revolute, Prismatic] as const
 
     static createHardpointByType(value: string) {
         value = value.toLowerCase()

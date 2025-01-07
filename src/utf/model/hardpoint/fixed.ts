@@ -4,9 +4,9 @@ import {
     type ReadableDirectory,
     type WritableDirectory,
 } from '../../types.js'
+import Position from './position.js'
+import Orientation from './orientation.js'
 import { Matrix, Quaternion, Vector } from '../../../math/index.js'
-import { readMatrix, readVector, writeMatrix, writeVector } from '../../utility.js'
-import File from '../../file.js'
 
 export default class Fixed implements ReadsDirectory, WritesDirectory {
     get [Symbol.toStringTag]() {
@@ -16,39 +16,53 @@ export default class Fixed implements ReadsDirectory, WritesDirectory {
     readonly kind = 'directory'
     readonly filename: string = 'Fixed'
 
-    position = Vector.origin()
-    orientation = Quaternion.identity()
+    #position = new Position()
+    #orientation = new Orientation()
+
+    constructor(
+        position = Vector.origin(),
+        orientation: Quaternion.QuaternionLike | Matrix.MatrixLike = Quaternion.identity()
+    ) {
+        this.position = position
+
+        if (Matrix.is(orientation)) orientation = Quaternion.fromMatrix(orientation)
+        this.orientation = orientation
+    }
+
+    get position(): Vector.VectorLike {
+        return Vector.copy(this.position)
+    }
+
+    set position({ x, y, z }) {
+        this.#position.x = x
+        this.#position.y = y
+        this.#position.z = z
+    }
+
+    get orientation(): Quaternion.QuaternionLike {
+        return Quaternion.copy(this.orientation)
+    }
+
+    set orientation(value) {
+        const { x, y, z, w } = Quaternion.normalize(value)
+
+        this.#orientation.x = x
+        this.#orientation.y = y
+        this.#orientation.z = z
+        this.#orientation.w = w
+    }
 
     get byteLength(): number {
-        return Vector.BYTES_PER_ELEMENT + Matrix.BYTES_PER_ELEMENT
-    }
-
-    clone(): Fixed {
-        const hardpoint = new Fixed()
-        hardpoint.copy(this)
-        return hardpoint
-    }
-
-    copy(value: Fixed): void {
-        this.position = Vector.copy(value.position)
-        this.orientation = Quaternion.copy(value.orientation)
+        return this.#position.byteLength + this.#orientation.byteLength
     }
 
     read(parent: ReadableDirectory): void {
-        const position = parent.getFile('Position')
-        if (position) this.position = readVector(position.view)
-
-        const orientation = parent.getFile('Orientation')
-        if (orientation) this.orientation = Quaternion.fromMatrix(readMatrix(orientation.view))
+        parent.read(this.#position)
+        parent.read(this.#orientation)
     }
 
     write(parent: WritableDirectory): void {
-        const position = new File(Vector.BYTES_PER_ELEMENT)
-        parent.set('Position', position)
-        writeVector(position.view, this.position)
-        
-        const orientation = new File(Matrix.BYTES_PER_ELEMENT)
-        parent.set('Orientation', orientation)
-        writeMatrix(orientation.view, Matrix.fromQuaternion(this.orientation))
+        parent.write(this.#position)
+        parent.write(this.#orientation)
     }
 }
