@@ -64,7 +64,7 @@ export default class Compound<T extends Part> extends Set<Compound<T>> implement
      * @param name
      * @returns
      */
-    findPart(name: Hashable): Compound<T> | undefined {
+    getPart(name: Hashable): Compound<T> | undefined {
         return findByResourceId(
             recurse(this, (compound) => compound),
             'name',
@@ -75,14 +75,14 @@ export default class Compound<T extends Part> extends Set<Compound<T>> implement
     /**
      * Loads model from a directory.
      * @param parent Root directory
-     * @param loadPart Load directory as individual part or fallback if a directory doesn't have compound data
+     * @param loadPart Loads directory as individual part
      * @returns
      */
-    static from<T extends Part>(parent: ReadableDirectory, loadPart: ReadFromDirectory<T>): Model<T> {
+    static from<T extends Part>(parent: ReadableDirectory, loadPart: ReadFromDirectory<T>): Compound<T> | undefined {
         const compound = parent.getDirectory('Cmpnd')
 
         // If parent directory does not have Cmpnd then assume it is a single part.
-        if (!compound) return loadPart(parent)
+        if (!compound) return
 
         /** Parts of the compound model. */
         const parts: Compound<T>[] = []

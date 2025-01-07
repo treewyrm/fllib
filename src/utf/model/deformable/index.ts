@@ -1,5 +1,6 @@
 import { type WritableDirectory, type WritesDirectory, type ReadableDirectory, type ReadsDirectory } from '../../types.js'
 import Compound from '../compound.js'
+import Loose from '../joint/loose.js'
 import Bone from './bone.js'
 import Mesh from './mesh.js'
 
@@ -14,7 +15,7 @@ export default class Deformable implements ReadsDirectory, WritesDirectory {
     fractions: number[] = []
 
     /** Skeleton root. */
-    root?: Compound<Bone>
+    root = new Compound(new Bone(), new Loose())
 
     read(parent: ReadableDirectory): void {
         const multiLevel = parent.getDirectory('MultiLevel')
@@ -34,13 +35,16 @@ export default class Deformable implements ReadsDirectory, WritesDirectory {
             this.meshes.push(mesh)
         }
 
+        // Read root compound.
+        // Deformable models are always compound and do not have single-part mode like rigid models do.
         const root = Compound.from(parent, (directory) => {
             const bone = new Bone()
             bone.read(directory)
             return bone
         })
 
-        if (root.isCompound) this.root = root
+        if (!root) throw new Error('Deformable model is missing Root bone')
+        this.root = root
     }
 
     write(parent: WritableDirectory): void {
@@ -50,6 +54,6 @@ export default class Deformable implements ReadsDirectory, WritesDirectory {
 
         for (const [index, mesh] of this.meshes.entries()) multiLevel.write(mesh, `Mesh${index}`)
 
-        this.root?.write(parent)
+        this.root.write(parent)
     }
 }

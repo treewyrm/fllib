@@ -7,6 +7,7 @@ import { Box, Sphere, Vector } from '../../math/index.js'
 import { type SphereLike } from '../../math/sphere.js'
 import { type BoxLike } from '../../math/box.js'
 import { VectorLike } from '../../math/vector.js'
+import Camera from './camera.js'
 
 export default class Rigid extends Part implements ReadsDirectory, WritesDirectory {
     readonly kind = 'directory'
@@ -23,6 +24,9 @@ export default class Rigid extends Part implements ReadsDirectory, WritesDirecto
 
     /** Reserved for collision detection hulls from Surfaces. */
     hulls?: unknown
+
+    /** Camera object for cockpits. */
+    camera?: Camera
 
     /** LOD ranges. */
     get ranges(): number[] {
@@ -110,6 +114,7 @@ export default class Rigid extends Part implements ReadsDirectory, WritesDirecto
     read(parent: ReadableDirectory): void {
         super.read(parent)
 
+        this.camera = parent.read(new Camera())
         this.part = parent.read(new MultiLevel()) ?? parent.read(new VMeshPart())
         this.wireframe = parent.read(new VMeshWire())
     }
@@ -117,6 +122,7 @@ export default class Rigid extends Part implements ReadsDirectory, WritesDirecto
     write(parent: WritableDirectory): void {
         super.write(parent)
 
+        if (this.camera) parent.write(this.camera)
         if (this.part) parent.write(this.part)
         if (this.wireframe) parent.write(this.wireframe)
     }
@@ -127,11 +133,13 @@ export default class Rigid extends Part implements ReadsDirectory, WritesDirecto
      * @returns
      */
     static load(root: ReadableDirectory): Model<Rigid> {
-        return Compound.from(root, (directory) => {
+        const create = (directory: ReadableDirectory) => {
             const part = new this()
             part.read(directory)
             return part
-        })
+        }
+
+        return Compound.from(root, create) ?? create(root)
     }
 
     /**
