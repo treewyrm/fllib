@@ -42,6 +42,10 @@ export default class Channel implements ReadsDirectory, WritesDirectory {
 
     keyframes: ChannelKeyframe[] = []
 
+    get byteLength(): number {
+        return 12 + 0 // Header + Frames
+    }
+
     /** Calculates starting and ending keys. */
     get range(): [start: number, end: number] {
         return this.interval < 0 ? range(this.keyframes) : [0, this.interval]

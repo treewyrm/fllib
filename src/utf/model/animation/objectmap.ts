@@ -12,6 +12,10 @@ export default class ObjectMap implements ReadsDirectory, WritesDirectory {
     parent = ''
     channel = new Channel()
 
+    get byteLength(): number {
+        return this.parent.length + 1 + this.channel.byteLength
+    }
+
     read(parent: ReadableDirectory): void {
         ;[this.parent = ''] = parent.getFile('Parent name')?.readStrings() ?? []
         this.channel = parent.read(new Channel()) ?? new Channel()

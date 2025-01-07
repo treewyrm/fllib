@@ -9,6 +9,8 @@ import { type TransformLike } from '../../math/transform.js'
 import { Hardpoint } from './types.js'
 import { Transform } from '../../math/index.js'
 import { Joint } from './constraint.js'
+import Deformable from './deformable.js'
+import Sphere from './sphere.js'
 
 type PartStep<T extends Part> = {
     type: 'part'
@@ -122,6 +124,7 @@ export function* iterateModel<T extends Part>(model: Model<T>, transforms: Trans
 }
 
 export { type Model }
-export { Fixed, Prismatic, Revolute, Cylinder, Loose, Sphere } from './joint/index.js'
-export { Compound, Part, Rigid }
+export * as Joint from './joint/index.js'
+export * as Hardpoint from './hardpoint/index.js'
+export { Compound, Deformable, Part, Rigid, Sphere }
 export { Animation, JointMap, ObjectMap, Channel }

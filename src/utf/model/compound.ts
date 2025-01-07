@@ -175,14 +175,16 @@ export default class Compound<T extends Part> extends Set<Compound<T>> implement
 
         /** Unique object names. */
         const names = new Set<string>()
+        const indices = new Set<number>()
 
         for (const [element] of this.parts) {
             const { name, filename, index, part } = element
 
             if (!name.length) throw new RangeError('Compound part has empty object name')
             if (!filename.length) throw new RangeError('Compound part has empty file name')
-            if (names.has(name)) throw new Error(`Duplicate compound part name: ${element.name}`)
-            if (!Number.isInteger(index)) throw new RangeError(`Non-integer part index.`)
+            if (names.has(name)) throw new Error(`Duplicate compound part name: ${name}`)
+            if (!Number.isInteger(index)) throw new RangeError(`Non-integer compound part index.`)
+            if (indices.has(index)) throw new RangeError(`Duplicate compound part index: ${index}`)
             
             names.add(name)
 

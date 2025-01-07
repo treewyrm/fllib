@@ -6,7 +6,7 @@
 
 import { Directory } from 'fllib/utf'
 import { Rigid, iterateModel, Model } from 'fllib/utf/model'
-import { Fixed } from 'fllib/utf/hardpoint'
+import { Hardpoint } from 'fllib/utf/model'
 import { Vector, Box, Quaternion, Transform } from 'fllib/math'
 
 import { readFile, writeFile, copyFile, stat } from 'node:fs/promises'
@@ -48,7 +48,7 @@ async function process(filename: string): Promise<void> {
     // Read rigid model from UTF.
     const model = Rigid.load(root)
 
-    const hardpoint = new Fixed(getOrigin(model))
+    const hardpoint = new Hardpoint.Fixed(getOrigin(model))
 
     // Adds HpOrigin hardpoint to root part or part itself.
     model.isCompound
@@ -57,7 +57,7 @@ async function process(filename: string): Promise<void> {
 
     const transform = findEngine(model)
     if (transform) {
-        const hardpoint = new Fixed(transform.position, transform.orientation)
+        const hardpoint = new Hardpoint.Fixed(transform.position, transform.orientation)
 
         // Adds HpEngineInternal hardpoint to root part or part itself (a bit redundant).
         model.isCompound

@@ -1,9 +1,12 @@
-import { type WritableDirectory, type WritesDirectory, type ReadableDirectory, type ReadsDirectory } from '../../types.js'
-import Compound from '../compound.js'
-import Loose from '../joint/loose.js'
-import Bone from './bone.js'
-import Mesh from './mesh.js'
+import { type WritableDirectory, type WritesDirectory, type ReadableDirectory, type ReadsDirectory } from '../types.js'
+import Compound from './compound.js'
+import Loose from './joint/loose.js'
+import Bone from './deformable/bone.js'
+import Mesh from './deformable/mesh.js'
 
+/**
+ * Deformable (skeleton) compound model. Used only for cutscene characters.
+ */
 export default class Deformable implements ReadsDirectory, WritesDirectory {
     filename?: string | undefined
     readonly kind = 'directory'

@@ -9,6 +9,12 @@ import { type BoxLike } from '../../math/box.js'
 import { VectorLike } from '../../math/vector.js'
 import Camera from './camera.js'
 
+/**
+ * Rigid model part. Used in compound model or separately for single-part model.
+ * For most objects either compound or single-part model can be used, except:
+ * - Asteroids have to be single-part models with one mesh group.
+ * - Starspheres have to be compound models (even if it contains only Root).
+ */
 export default class Rigid extends Part implements ReadsDirectory, WritesDirectory {
     readonly kind = 'directory'
 
