@@ -30,7 +30,7 @@ export default class Fixed implements ReadsDirectory, WritesDirectory {
     }
 
     get position(): Vector.VectorLike {
-        return Vector.copy(this.position)
+        return Vector.copy(this.#position)
     }
 
     set position({ x, y, z }) {
@@ -40,7 +40,7 @@ export default class Fixed implements ReadsDirectory, WritesDirectory {
     }
 
     get orientation(): Quaternion.QuaternionLike {
-        return Quaternion.copy(this.orientation)
+        return Quaternion.copy(this.#orientation)
     }
 
     set orientation(value) {

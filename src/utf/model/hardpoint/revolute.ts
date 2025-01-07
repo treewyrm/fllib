@@ -32,7 +32,7 @@ export default class Revolute extends Fixed {
     }
 
     get axis(): Vector.VectorLike {
-        return Vector.copy(this.axis)
+        return Vector.copy(this.#axis)
     }
 
     set axis(value) {
