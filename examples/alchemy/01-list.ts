@@ -18,7 +18,7 @@ for (const node of nodes) {
         list.push({
             name,
             type: property.constructor.name,
-            value: property.value,
+            value: 'value' in property ? property.value : null,
         })
     }
 

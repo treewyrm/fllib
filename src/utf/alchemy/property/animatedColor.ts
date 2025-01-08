@@ -1,10 +1,8 @@
 import { type BufferReader, type BufferWriter } from '../../../buffer/types.js'
 import { Animation, Scalar, Vector } from '../../../math/index.js'
+import { readVector } from '../../utility.js'
 import { Easing, ease } from '../easing.js'
 import { type AnimatedProperty } from '../types.js'
-import { sortProperty } from '../utility.js'
-
-type VectorLike = Vector.VectorLike
 
 type Keyframe<T> = Animation.Keyframe<T>
 
@@ -15,17 +13,18 @@ export interface AnimatedColor {
 
 /** Animated color property (typically used for relative time, such as over a lifespan of a particle). */
 export default class AnimatedColorProperty implements AnimatedProperty<AnimatedColor> {
-
     /**
      * Evaluate color animation at key.
      * @param animation
-     * @param key 
-     * @returns 
+     * @param key
+     * @returns
      */
-    static at({ keyframes, easing }: AnimatedColor, key: number): VectorLike {
+    static at({ keyframes, easing }: AnimatedColor, key: number): Vector.VectorLike {
+        if (!keyframes.length) throw new RangeError('Animated color is missing keyframe data')
+
         const [start, end, weight] = Animation.at(keyframes, key)
         key = ease(weight, easing)
-    
+
         return {
             x: Scalar.linear(start.x, end.x, key),
             y: Scalar.linear(start.y, end.y, key),
@@ -73,54 +72,58 @@ export default class AnimatedColorProperty implements AnimatedProperty<AnimatedC
         )
     }
 
-    at(parameter: number, time: number): VectorLike {
-        const [start, end, weight] = Animation.at(this.keyframes, parameter)
+    at(parameter: number, time: number): Vector.VectorLike {
+        const { keyframes, easing } = this
+
+        if (!keyframes.length) throw new RangeError('Animated color property is missing keyframe data')
+
+        const [start, end, weight] = Animation.at(keyframes, parameter)
 
         const a = AnimatedColorProperty.at(start, time)
-        const b = AnimatedColorProperty.at(end, time)
+        if (start === end) return a
 
-        return Vector.lerp(a, b, ease(weight, this.easing))
+        const b = AnimatedColorProperty.at(end, time)
+        if (a === b) return a
+
+        return Vector.lerp(a, b, ease(weight, easing))
+    }
+
+    static *readKeyframes(view: BufferReader) {
+        for (let count = view.readUint8(); count > 0; count--)
+            yield {
+                key: view.readFloat32(),
+                value: readVector(view),
+            }
+    }
+
+    static *readParameters(view: BufferReader) {
+        for (let count = view.readUint8(); count > 0; count--)
+            yield {
+                key: view.readFloat32(),
+                value: {
+                    easing: view.readUint8(),
+                    keyframes: [...AnimatedColorProperty.readKeyframes(view)],
+                },
+            }
     }
 
     read(view: BufferReader): void {
         this.easing = view.readUint8()
-        this.keyframes = []
-
-        for (let i = 0, length = view.readUint8(); i < length; i++) {
-            const key = view.readFloat32()
-            const easing = view.readUint8()
-            const keyframes = []
-
-            for (let i = 0, length = view.readUint8(); i < length; i++)
-                keyframes[i] = {
-                    key: view.readFloat32(),
-                    value: {
-                        x: view.readFloat32(),
-                        y: view.readFloat32(),
-                        z: view.readFloat32(),
-                    },
-                }
-
-            this.keyframes[i] = { key, value: { easing, keyframes } }
-        }
+        this.keyframes = [...AnimatedColorProperty.readParameters(view)]
     }
 
     write(view: BufferWriter): void {
-        if (!this.keyframes.length) throw new RangeError(`Animated color is missing parameter keyframes.`)
+        const { keyframes: parameters, easing } = this
 
-        sortProperty(this)
-
-        view.writeUint8(this.easing ?? Easing.None)
-        view.writeUint8(this.keyframes.length)
+        view.writeUint8(easing)
+        view.writeUint8(parameters.length)
 
         for (const {
             key,
             value: { easing, keyframes },
-        } of this.keyframes) {
-            if (!keyframes.length) throw new RangeError(`Animated color property ${key} is missing keyframes.`)
-
+        } of parameters) {
             view.writeFloat32(key)
-            view.writeUint8(easing ?? Easing.None)
+            view.writeUint8(easing)
             view.writeUint8(keyframes.length)
 
             for (const {
