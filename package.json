@@ -18,6 +18,9 @@
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   },
+  "files": [
+    "/dist"
+  ],
   "exports": {
     ".": "./dist/index.js",
     "./hash": "./dist/hash/index.js",
@@ -26,8 +29,6 @@
     "./utf": "./dist/utf/index.js",
     "./utf/model": "./dist/utf/model/index.js",
     "./utf/vmesh": "./dist/utf/vmesh/index.js",
-    "./utf/rigid": "./dist/utf/model/rigid.js",
-    "./utf/hardpoint": "./dist/utf/model/hardpoint/index.js",
     "./utf/material": "./dist/utf/material/index.js",
     "./utf/texture": "./dist/utf/texture/index.js",
     "./utf/alchemy": "./dist/utf/alchemy/index.js",

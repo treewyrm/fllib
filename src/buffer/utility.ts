@@ -1,4 +1,4 @@
-import { Readable, Writable } from './types.js'
+import { type Readable, type Writable } from './types.js'
 import BufferView, { isWritable } from './view.js'
 
 interface HasByteLength {

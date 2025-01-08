@@ -1,13 +1,13 @@
 import { clamp } from '../math/scalar.js'
-import { BufferReader, BufferWriter, Readable, Writable } from './types.js'
-
-const decoder = new TextDecoder()
-const encoder = new TextEncoder()
+import { type BufferReader, type BufferWriter, type Readable, type Writable } from './types.js'
 
 export default class BufferView<T extends ArrayBufferLike = ArrayBufferLike>
     extends DataView<T>
     implements BufferReader, BufferWriter
 {
+    static readonly decoder = new TextDecoder()
+    static readonly encoder = new TextEncoder()
+
     /** Byte order. */
     littleEndian = true
 
@@ -21,12 +21,12 @@ export default class BufferView<T extends ArrayBufferLike = ArrayBufferLike>
 
     /**
      * Create view from number (byteLength), string, ArrayBufferView or Writable object.
-     * @param value 
-     * @returns 
+     * @param value
+     * @returns
      */
     static from(value: number | string | ArrayBufferView | Writable): BufferView {
         if (typeof value === 'number') return new this(new ArrayBuffer(value))
-        if (typeof value === 'string') return new this(encoder.encode(value).buffer)
+        if (typeof value === 'string') return new this(this.encoder.encode(value).buffer)
         if (ArrayBuffer.isView(value)) return new this(value.buffer, value.byteOffset, value.byteLength)
 
         if (isWritable(value)) {
@@ -325,7 +325,7 @@ export default class BufferView<T extends ArrayBufferLike = ArrayBufferLike>
 
         buffer = buffer.subarray(0, index < 0 ? undefined : index)
         this.offset += buffer.byteLength + (index < 0 ? 0 : 1)
-        return decoder.decode(buffer)
+        return BufferView.decoder.decode(buffer)
     }
 
     /**
@@ -333,7 +333,7 @@ export default class BufferView<T extends ArrayBufferLike = ArrayBufferLike>
      * @param value
      */
     writeZString(value: string): void {
-        const { written } = encoder.encodeInto(
+        const { written } = BufferView.encoder.encodeInto(
             value + '\0',
             new Uint8Array(this.buffer, this.byteOffset + this.offset, this.byteRemain)
         )
