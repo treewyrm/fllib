@@ -1,6 +1,5 @@
 import { type BufferReader, type BufferWriter } from '../../../buffer/types.js'
 import { type VectorLike } from '../../../math/vector.js'
-import { type AnimatedProperty } from '../types.js'
 import AnimatedCurveProperty from './animatedCurve.js'
 
 export type TransformValue = {
@@ -73,7 +72,7 @@ export class AnimatedAxis {
 }
 
 /** Animated transform property. */
-export default class TransformProperty implements Omit<AnimatedProperty<TransformValue>, 'keyframes'> {
+export default class TransformProperty {
     static readonly type = 0x105
     static readonly typeName = 'transform'
 

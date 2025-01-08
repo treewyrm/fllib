@@ -22,6 +22,6 @@ describe('Animation functions', () => {
         },
     ]
 
-    it('Before first keyframe', () => deepStrictEqual(Animation.at(keyframes, -10), [0, -100, -100]))
-    it('After last keyframe', () => deepStrictEqual(Animation.at(keyframes, 110), [0, 100, 100]))
+    it('Before first keyframe', () => deepStrictEqual(Animation.at(keyframes, -10), [-100, -100, 0]))
+    it('After last keyframe', () => deepStrictEqual(Animation.at(keyframes, 110), [100, 100, 0]))
 })

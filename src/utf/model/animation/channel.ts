@@ -71,12 +71,11 @@ export default class Channel implements ReadsDirectory, WritesDirectory {
         // TODO: Rework remap for to support THN compound animation control.
         key = Scalar.remap(Scalar.repeat(Scalar.remap(key, from, to, 0, 1)), 0, 1, from, to)
 
-        const [weight, start, end] = this.getValuesAt(key)
-        if (!start || !end) throw new RangeError('Missing animation keyframes')
-
-        const single = this.type & ChannelType.Single ? Scalar.linear(weight, start.single!, end.single!) : undefined
-        const position = this.type & ChannelType.Vector ? Vector.lerp(weight, start.position!, end.position!) : undefined
-        const rotation = this.type & ChannelType.Quaternion ? Quaternion.slerp(weight, start.rotation!, end.rotation!) : undefined
+        const [start, end, weight] = this.getValuesAt(key)
+        
+        const single = this.type & ChannelType.Single ? Scalar.linear(start.single!, end.single!, weight) : undefined
+        const position = this.type & ChannelType.Vector ? Vector.lerp(start.position!, end.position!, weight) : undefined
+        const rotation = this.type & ChannelType.Quaternion ? Quaternion.slerp(start.rotation!, end.rotation!, weight) : undefined
 
         return {
             single,

@@ -22,10 +22,8 @@ export default class Prismatic extends Fixed {
     maximum = 0
 
     positionAt(time: number, keyframes: Keyframe<number>[]) {
-        const [weight, start, end] = at(keyframes, time)
-        if (!start || !end) return this.position
-
-        return Vector.add(Vector.multiplyScalar(this.axis, Scalar.linear(weight, start, end)), this.position)
+        if (!keyframes.length) return this.position
+        return Vector.add(Vector.multiplyScalar(this.axis, Scalar.linear(...at(keyframes, time))), this.position)
     }
 
     read(view: BufferReader) {

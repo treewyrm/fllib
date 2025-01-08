@@ -1,6 +1,6 @@
 import { cubicIn, cubicOut, cubic, step } from '../../math/scalar.js'
 
-export enum EasingType {
+export enum Easing {
     None,
     Linear,
     EaseIn,
@@ -9,26 +9,19 @@ export enum EasingType {
     Step,
 }
 
-export const getEasing = (type?: EasingType) => {
-    switch (type) {
-        case EasingType.EaseIn:
-            return cubicIn
-        case EasingType.EaseOut:
-            return cubicOut
-        case EasingType.EaseBoth:
-            return cubic
-        case EasingType.Step:
-            return step
+export const ease = (key: number, easing?: Easing) => {
+    switch (easing) {
+        case Easing.Linear:
+            return key
+        case Easing.EaseIn:
+            return cubicIn(key)
+        case Easing.EaseOut:
+            return cubicOut(key)
+        case Easing.EaseBoth:
+            return cubic(key)
+        case Easing.Step:
+            return step(key)
         default:
-            return undefined
+            return 0
     }
 }
-
-export const easeMap = new Map<EasingType, (t: number) => number>([
-    [EasingType.EaseIn, cubicIn],
-    [EasingType.EaseOut, cubicOut],
-    [EasingType.EaseBoth, cubic],
-    [EasingType.Step, step],
-])
-
-export const ease = (t: number, type = EasingType.Linear) => easeMap.get(type)?.(t) ?? t

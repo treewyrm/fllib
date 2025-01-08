@@ -4,7 +4,7 @@ import * as Scalar from './scalar.js'
 export type Keyframe<T> = { key: number; value: T }
 
 /** Weighted result. */
-export type ValueTuple<T> = [weight: number, start?: T, end?: T]
+export type ValueTuple<T> = [start: T, end: T, weight: number]
 
 /** Key range. */
 export type Range = [start: number, end: number]
@@ -78,7 +78,11 @@ export const atEquidistantKeyframes = <T>(keyframes: Keyframe<T>[], key: number)
     const start = position >> 0
     const end = Scalar.clamp(start + 1, 0, last)
 
-    return [weight, keyframes.at(start)?.value, keyframes.at(end)?.value]
+    const a = keyframes.at(start)
+    const b = keyframes.at(end)
+    if (!a || !b) throw new Error('Missing keyframe data')
+
+    return [a.value, b.value, weight]
 }
 
 /**
@@ -115,13 +119,13 @@ export const at = <T>(keyframes: Iterable<Keyframe<T>>, key: number): ValueTuple
     }
 
     // Key is either invalid or there were no keyframes.
-    if (!ahead) return [NaN]
+    if (!ahead) throw new Error('Missing keyframe data')
 
     // Current won't be available if key precedes first keyframe.
     before ??= ahead
 
     // Mix keyframes by weight of transition between two keyframes.
-    return [Math.abs(Scalar.clamp((key - before.key) / delta, 0, 1)), before.value, ahead.value]
+    return [before.value, ahead.value, Math.abs(Scalar.clamp((key - before.key) / delta, 0, 1))]
 }
 
 /**

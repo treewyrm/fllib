@@ -1,30 +1,36 @@
 import { type BufferReader, type BufferWriter } from '../../../buffer/types.js'
 import { Animation, Scalar } from '../../../math/index.js'
-import { EasingType, getEasing } from '../easing.js'
-import { type AnimatedProperty, type KeyframeProperty } from '../types.js'
+import { Easing, ease } from '../easing.js'
+import { type AnimatedProperty } from '../types.js'
 import { sortProperty } from '../utility.js'
 
 type Keyframe<T> = Animation.Keyframe<T>
 
-export type AnimatedFloat = KeyframeProperty<number> & {
-    easing?: EasingType
-}
-
-const getFloatValueAt = (keyframes: Iterable<Keyframe<number>>, key: number, ease?: (t: number) => number): number => {
-    const [weight, start, end] = Animation.at(keyframes, key)
-    if (start === undefined || end === undefined) return NaN
-
-    return Scalar.linear(ease?.(weight) ?? weight, start, end)
+export interface AnimatedFloat {
+    easing: Easing
+    keyframes: Keyframe<number>[]
 }
 
 /** Animated float property (typically used for relative time, such as over a lifespan of a particle). */
-export default class AnimatedFloatProperty implements AnimatedProperty<number> {
+export default class AnimatedFloatProperty implements AnimatedProperty<AnimatedFloat> {
+
+    /**
+     * Evaluate animated float at key.
+     * @param animation
+     * @param key 
+     * @returns 
+     */
+    static at({ keyframes, easing }: AnimatedFloat, key: number): number {
+        const [start, end, weight] = Animation.at(keyframes, key)
+        if (start === end) return start
+    
+        return Scalar.linear(start, end, ease(weight, easing))
+    }
+
     static readonly type = 0x200
     static readonly typeName = 'animated-float'
 
-    value = 0
-
-    easing?: EasingType = EasingType.EaseBoth
+    easing = Easing.EaseBoth
 
     keyframes: Keyframe<AnimatedFloat>[] = [
         {
@@ -58,13 +64,14 @@ export default class AnimatedFloatProperty implements AnimatedProperty<number> {
     }
 
     at(parameter: number, time: number): number {
-        const [weight, start, end] = Animation.at(this.keyframes, parameter)
-        if (!start || !end) throw new RangeError('Missing animated float parameter keyframes')
+        const [start, end, weight] = Animation.at(this.keyframes, parameter)
+        const a = AnimatedFloatProperty.at(start, time)
+        if (start === end) return a
 
-        const a = getFloatValueAt(start.keyframes, time, getEasing(start.easing))
-        const b = getFloatValueAt(end.keyframes, time, getEasing(end.easing))
+        const b = AnimatedFloatProperty.at(end, time)
+        if (a === b) return a
 
-        return (this.value = Scalar.linear(getEasing(this.easing)?.(weight) ?? weight, a, b))
+        return Scalar.linear(a, b, ease(weight, this.easing))
     }
 
     read(view: BufferReader): void {
@@ -91,7 +98,7 @@ export default class AnimatedFloatProperty implements AnimatedProperty<number> {
 
         sortProperty(this)
 
-        view.writeUint8(this.easing ?? EasingType.None)
+        view.writeUint8(this.easing ?? Easing.None)
         view.writeUint8(this.keyframes.length)
 
         for (const {
@@ -101,7 +108,7 @@ export default class AnimatedFloatProperty implements AnimatedProperty<number> {
             if (!keyframes.length) throw new RangeError(`Animated float parameter ${key} is missing keyframes.`)
 
             view.writeFloat32(key)
-            view.writeUint8(easing ?? EasingType.None)
+            view.writeUint8(easing ?? Easing.None)
             view.writeUint8(keyframes.length)
 
             for (const { key, value } of keyframes) {

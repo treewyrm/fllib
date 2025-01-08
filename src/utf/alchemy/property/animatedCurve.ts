@@ -1,62 +1,46 @@
 import { type BufferReader, type BufferWriter } from '../../../buffer/types.js'
 import { Animation, Scalar, Vector } from '../../../math/index.js'
-import { EasingType, getEasing } from '../easing.js'
-import { type AnimatedProperty, type KeyframeProperty } from '../types.js'
+import { Easing, ease } from '../easing.js'
+import { type AnimatedProperty } from '../types.js'
 import { sortProperty } from '../utility.js'
 import { wrap, WrapFlags } from '../wrap.js'
 
 type Keyframe<T> = Animation.Keyframe<T>
 
-type VectorLike = Vector.VectorLike
-
-type AnimatedCurve = KeyframeProperty<VectorLike> & {
+export interface AnimatedCurve {
     defaultValue: number
     flags: WrapFlags
-}
-
-/**
- * Gets float value from keyframes at key. Keyframe value is VectorLike where:
- * - x is value
- * - y is in tangent
- * - z is out tangent
- * @param keyframes
- * @param key
- * @returns
- */
-const getHermiteValueAt = <T extends VectorLike>(keyframes: Iterable<Keyframe<T>>, key: number): number => {
-    const [weight, start, end] = Animation.at(keyframes, key)
-    if (!start || !end) return NaN
-
-    return Scalar.hermite(weight, start.x, start.z, end.x, end.y)
-}
-
-const atCurve = (keyframes: Keyframe<VectorLike>[], time: number, flags: WrapFlags): number | undefined => {
-    const first = keyframes.at(0)
-    const last = keyframes.at(-1)
-
-    if (!first || !last) return undefined
-    if (first === last) return first.value.x
-
-    /** Value distance for single loop. A closed loop will have 0. */
-    const distance = last.value.x - first.value.x
-    let [key, count] = wrap(time, first.key, last.key, flags)
-
-    if (key > last.key) key = first.key
-
-    const value = getHermiteValueAt(keyframes, key)
-    if (isNaN(value)) return undefined
-
-    return value + distance * count
+    keyframes: Keyframe<Vector.VectorLike>[]
 }
 
 /** Animated curve property (typically used for absolute time). */
-export default class AnimatedCurveProperty implements AnimatedProperty<number, VectorLike> {
+export default class AnimatedCurveProperty implements AnimatedProperty<AnimatedCurve> {
+
+    /**
+     * Evaluate hermite animation at key.
+     * @param animation 
+     * @param key 
+     * @returns 
+     */
+    static at({ keyframes, flags, defaultValue }: AnimatedCurve, key: number, count = 0): number {
+        const first = keyframes.at(0)
+        const last = keyframes.at(-1)
+    
+        if (!first || !last) return defaultValue
+        if (first === last) return first.value.x
+    
+        ;[key, count] = wrap(key, first.key, last.key, flags)
+        if (key > last.key) key = first.key
+    
+        const [start, end, weight] = Animation.at(keyframes, key)
+        return Scalar.hermite(start.x, start.z, end.x, end.y, weight) + (last.value.x - first.value.x) * count
+    }
+
     static readonly type = 0x202
     static readonly typeName = 'animated-curve'
 
     keyframes: Keyframe<AnimatedCurve>[] = []
-    easing?: EasingType = EasingType.EaseBoth
-    value = 0
+    easing = Easing.EaseBoth
 
     constructor(defaultValue = 0) {
         this.keyframes = [
@@ -89,13 +73,12 @@ export default class AnimatedCurveProperty implements AnimatedProperty<number, V
     }
 
     at(parameter: number, time: number): number {
-        const [weight, start, end] = Animation.at(this.keyframes, parameter)
-        if (!start || !end) throw new RangeError('Missing animated curve parameter keyframes')
+        const [start, end, weight] = Animation.at(this.keyframes, parameter)
 
-        const a = atCurve(start.keyframes, time, start.flags) ?? start.defaultValue
-        const b = atCurve(end.keyframes, time, end.flags) ?? end.defaultValue
+        const a = AnimatedCurveProperty.at(start, time)
+        const b = AnimatedCurveProperty.at(end, time)
 
-        return (this.value = Scalar.linear(getEasing(this.easing)?.(weight) ?? weight, a, b))
+        return Scalar.linear(a, b, ease(weight, this.easing))
     }
 
     read(view: BufferReader): void {
@@ -127,7 +110,7 @@ export default class AnimatedCurveProperty implements AnimatedProperty<number, V
 
         sortProperty(this)
 
-        view.writeUint8(this.easing ?? EasingType.None)
+        view.writeUint8(this.easing ?? Easing.None)
         view.writeUint8(this.keyframes.length)
 
         for (const {

@@ -154,10 +154,10 @@ export const reflect = (a: VectorLike, b: VectorLike): VectorLike => {
  * @param b End vector
  * @returns 
  */
-export const lerp = (t: number, a: VectorLike, b: VectorLike): VectorLike => ({
-    x: Scalar.linear(t, a.x, b.x),
-    y: Scalar.linear(t, a.y, b.y),
-    z: Scalar.linear(t, a.z, b.z),
+export const lerp = (a: VectorLike, b: VectorLike, t: number): VectorLike => ({
+    x: Scalar.linear(a.x, b.x, t),
+    y: Scalar.linear(a.y, b.y, t),
+    z: Scalar.linear(a.z, b.z, t),
 })
 
 /**
@@ -168,7 +168,7 @@ export const lerp = (t: number, a: VectorLike, b: VectorLike): VectorLike => ({
  * @returns
  */
 export const slerp = (a: VectorLike, b: VectorLike, t: number): VectorLike => {
-    if (t < 0.01) return lerp(t, a, b)
+    if (t < 0.01) return lerp(a, b, t)
 
     a = normalize(a)
     b = normalize(b)

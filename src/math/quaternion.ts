@@ -273,7 +273,7 @@ export const transform = (v: VectorLike, q: QuaternionLike): VectorLike => {
  * @param epsilon Narrow distance to switch to linear interpolation
  * @returns
  */
-export const slerp = (t: number, a: QuaternionLike, b: QuaternionLike, epsilon = 0.0001): QuaternionLike => {
+export const slerp = (a: QuaternionLike, b: QuaternionLike, t: number, epsilon = 0.0001): QuaternionLike => {
     let d = dot(a, b)
 
     if (d < 0) {

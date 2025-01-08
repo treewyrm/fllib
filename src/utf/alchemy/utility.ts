@@ -1,7 +1,11 @@
 import { VectorLike } from '../../math/vector.js'
-import { EasingType } from './easing.js'
-import { type Keyframe, type KeyframeProperty } from './types.js'
+import { Easing } from './easing.js'
+import { type Keyframe } from './types.js'
 import { Animation } from '../../math/index.js'
+
+interface KeyframeProperty<T> {
+    keyframes: Keyframe<T>[]
+}
 
 export const upsertKeyframe = <T>(keyframes: Keyframe<T>[], key: number, value: T): Keyframe<T> => {
     let keyframe = keyframes.find((keyframe) => keyframe.key === key)
@@ -81,20 +85,20 @@ export const sortProperty = ({ keyframes }: KeyframeProperty<KeyframeProperty<un
  * @param type
  * @returns
  */
-export const setCurveEasing = (start: Keyframe<VectorLike>, end: Keyframe<VectorLike>, type: EasingType): void => {
+export const setCurveEasing = (start: Keyframe<VectorLike>, end: Keyframe<VectorLike>, type: Easing): void => {
     const t = Math.abs(end.key - start.key)
     const v = start.value.x - end.value.x
 
     end.value.z = start.value.y = 0
 
     switch (type) {
-        case EasingType.Linear:
+        case Easing.Linear:
             end.value.z = start.value.y = v / t
             break
-        case EasingType.EaseIn:
+        case Easing.EaseIn:
             end.value.z = v / (t * 0.5)
             break
-        case EasingType.EaseOut:
+        case Easing.EaseOut:
             start.value.y = v / (t * 0.5)
             break
     }

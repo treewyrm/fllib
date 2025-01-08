@@ -21,10 +21,8 @@ export default class Sphere extends Fixed {
     maximum = Vector.origin()
 
     rotationAt(time: number, keyframes: Keyframe<QuaternionLike>[]) {
-        const [weight, start, end] = at(keyframes, time)
-        if (!start || !end) return this.rotation
-
-        return Quaternion.slerp(weight, start, end)
+        if (!keyframes.length) return this.rotation
+        return Quaternion.slerp(...at(keyframes, time))
     }
 
     read(view: BufferReader): void {

@@ -64,8 +64,8 @@ export const multiply = (child: TransformLike, parent: TransformLike): Transform
  * @returns
  */
 export const interpolate = (t: number, a: TransformLike, b: TransformLike): TransformLike => ({
-    position: Vector.lerp(t, a.position, b.position),
-    orientation: Quaternion.slerp(t, a.orientation, b.orientation),
+    position: Vector.lerp(a.position, b.position, t),
+    orientation: Quaternion.slerp(a.orientation, b.orientation, t),
 })
 
 /** Converts transformation to Matrix4. */

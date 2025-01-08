@@ -177,7 +177,7 @@ export const square = (v: number, a = 1, p = 1): number => (p > 0 ? (mod(v, 2 * 
  * @param v End velocity
  * @returns
  */
-export const hermite = (t: number, a: number, u: number, b: number, v: number): number => {
+export const hermite = (a: number, u: number, b: number, v: number, t: number): number => {
     const t1 = 1 - t
     const t2 = t1 * t1
     const tt = t * t
@@ -187,12 +187,12 @@ export const hermite = (t: number, a: number, u: number, b: number, v: number): 
 
 /**
  * Linear interpolation.
- * @param t Time
  * @param a Start value
  * @param b End value
+ * @param t Time
  * @returns
  */
-export const linear = (t: number, a: number, b: number): number => a * (1 - t) + b * t
+export const linear = (a: number, b: number, t: number): number => a * (1 - t) + b * t
 
 export const smooth = (t: number): number => t * t * (3 - 2 * t)
 

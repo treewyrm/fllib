@@ -1,13 +1,8 @@
 import { type Readable, type Writable } from '../../buffer/types.js'
 import { Animation } from '../../math/index.js'
+import { Easing } from './easing.js'
 
 export type Keyframe<T> = Animation.Keyframe<T>
-
-/** An object with keyframes. */
-export interface KeyframeProperty<T> {
-    /** Array of keyframes. Should be sorted. */
-    keyframes: Keyframe<T>[]
-}
 
 /** A readable/writable static value object. */
 export interface Property<T> extends Readable, Writable {
@@ -15,17 +10,9 @@ export interface Property<T> extends Readable, Writable {
     value: T
 }
 
-/** An animated value property. */
-export interface AnimatedProperty<T, K = T> extends Property<T>, KeyframeProperty<KeyframeProperty<K>> {
-    /** Last evaluated value. */
-    readonly value: T
-
-    /**
-     * Evaluate animation.
-     * @param parameter External parameter.
-     * @param time Time.
-     */
-    at(parameter: number, time: number): T
+export interface AnimatedProperty<T> extends Readable, Writable {
+    easing: Easing,
+    keyframes: Keyframe<T>[]
 }
 
 /** Known node types. */

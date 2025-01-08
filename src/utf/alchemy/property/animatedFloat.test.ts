@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test'
 import AnimatedFloatProperty from './animatedFloat.js'
-import { EasingType } from '../easing.js'
+import { Easing } from '../easing.js'
 import { strictEqual } from 'node:assert'
 import { writeAndRead } from '../../../buffer/tests.js'
 
@@ -11,7 +11,7 @@ describe('Animated float property', () => {
         {
             key: 0,
             value: {
-                easing: EasingType.Linear,
+                easing: Easing.Linear,
                 keyframes: [
                     {
                         key: 0,

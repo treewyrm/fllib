@@ -21,7 +21,7 @@ export const origin = (): BoxLike => ({ minimum: Vector.origin(), maximum: Vecto
 export const empty = (): BoxLike => ({ minimum: Vector.positiveInfinity(), maximum: Vector.negativeInfinity() })
 
 /** Calculates center of a box. */
-export const center = ({ minimum, maximum }: BoxLike): VectorLike => Vector.lerp(0.5, minimum, maximum)
+export const center = ({ minimum, maximum }: BoxLike): VectorLike => Vector.lerp(minimum, maximum, 0.5)
 
 /** Calculates size of a box. */
 export const size = ({ minimum, maximum }: BoxLike): VectorLike => Vector.abs(Vector.subtract(maximum, minimum))
