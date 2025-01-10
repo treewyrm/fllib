@@ -1,28 +1,32 @@
-import { type ReadableDirectory } from '../types.js'
-import Material from './material.js'
+import { type ReadableDirectory, type WritableDirectory } from '../types.js'
 import { type TypesOf } from '../../types.js'
-import MapChannel from './channel.js'
+import { Flags } from './channel.js'
+import Material from './material.js'
 
 export default class NomadMaterial extends Material {
     static readonly types = ['NomadMaterial', 'NomadMaterialNoBendy'] as const
 
+    static readonly defaultNomadTextureName = 'NomadRGB1_NomadAlpha1'
+
     type: TypesOf<typeof NomadMaterial> = 'NomadMaterial'
 
-    diffuse = new MapChannel('D')
-    nomad = new MapChannel('N')
+    /** Nomad texture name (`Nt_name`) */
+    nomadTextureName?: string
 
-    opacity = 1
-
-    constructor() {
-        super()
-        this.nomad.name = 'NomadRGB1_NomadAlpha1'
-    }
+    /** Nomad texture flags (`Nt_flags`) */
+    nomadTextureFlags?: Flags
 
     read(parent: ReadableDirectory): void {
         super.read(parent)
 
-        this.diffuse.read(parent)
-        this.nomad.read(parent)
-        ;[this.opacity = this.opacity] = parent.getFile('Oc')?.readFloats() ?? []
+        this.nomadTextureName = parent.getFile('Nt_name')?.readString()
+        this.nomadTextureFlags = parent.getFile('Nt_flags')?.readInteger()
+    }
+
+    write(parent: WritableDirectory): void {
+        super.write(parent)
+
+        if (this.nomadTextureName) parent.setFile('Nt_name').writeStrings(this.nomadTextureName)
+        if (this.nomadTextureFlags) parent.setFile('Nt_flags').writeIntegers(this.nomadTextureFlags)
     }
 }

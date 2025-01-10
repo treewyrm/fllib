@@ -157,11 +157,20 @@ export interface ReadableFile {
     /** Reads sequence of signed integers. */
     readIntegers(): Generator<number, void, void>
 
+    /** Reads single integer. */
+    readInteger(): number | undefined
+
     /** Reads sequence of 32-bit float point numbers. */
     readFloats(): Generator<number, void, void>
 
+    /** Reads single float. */
+    readFloat(): number | undefined
+
     /** Reads sequence of NUL-terminated strings. */
     readStrings(): Generator<string, void, void>
+
+    /** Reads single string. */
+    readString(): string | undefined
 }
 
 export interface WritableFile {

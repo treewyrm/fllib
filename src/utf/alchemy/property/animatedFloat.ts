@@ -77,7 +77,7 @@ export default class AnimatedFloatProperty implements AnimatedProperty<AnimatedF
         return Scalar.linear(a, b, ease(weight, easing))
     }
 
-    static *readKeyframes(view: BufferReader) {
+    static *readKeyframes(view: BufferReader): Generator<Keyframe<number>> {
         for (let count = view.readUint8(); count > 0; count--)
             yield {
                 key: view.readFloat32(),
@@ -85,7 +85,7 @@ export default class AnimatedFloatProperty implements AnimatedProperty<AnimatedF
             }
     }
 
-    static *readParameters(view: BufferReader) {
+    static *readParameters(view: BufferReader): Generator<Keyframe<AnimatedFloat>> {
         for (let count = view.readUint8(); count > 0; count--)
             yield {
                 key: view.readFloat32(),
@@ -101,25 +101,28 @@ export default class AnimatedFloatProperty implements AnimatedProperty<AnimatedF
         this.keyframes = [...AnimatedFloatProperty.readParameters(view)]
     }
 
-    write(view: BufferWriter): void {
-        const { keyframes: parameters, easing } = this
+    static writeKeyframes(view: BufferWriter, keyframes: Keyframe<number>[]): void {
+        view.writeUint8(keyframes.length)
 
-        view.writeUint8(easing)
+        for (const { key, value } of keyframes) {
+            view.writeFloat32(key)
+            view.writeFloat32(value)
+        }
+    }
+
+    static writeParameters(view: BufferWriter, parameters: Keyframe<AnimatedFloat>[]): void {
         view.writeUint8(parameters.length)
 
-        for (const {
-            key,
-            value: { easing, keyframes },
-        } of parameters) {
+        for (const { key, value: { easing, keyframes } } of parameters) {
             view.writeFloat32(key)
             view.writeUint8(easing)
-            view.writeUint8(keyframes.length)
-
-            for (const { key, value } of keyframes) {
-                view.writeFloat32(key)
-                view.writeFloat32(value)
-            }
+            this.writeKeyframes(view, keyframes)
         }
+    }
+
+    write(view: BufferWriter): void {
+        view.writeUint8(this.easing)
+        AnimatedFloatProperty.writeParameters(view, this.keyframes)
     }
 
     toJSON() {

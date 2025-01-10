@@ -13,21 +13,21 @@ export enum WrapFlags {
 }
 
 /**
- * Wrap key
+ * Limit key to min/max range by control flags.
  * @param key
- * @param min
- * @param max
+ * @param start Range start
+ * @param end Range end
  * @param flags
- * @returns Key clamped to keyframe range
+ * @returns Key clamped to keyframe range and multiplier for value difference
  */
-export function wrap(key: number, min: number, max: number, flags: WrapFlags): [key: number, multiplier: number] {
-    let multiplier = 0
+export function wrap(flags: WrapFlags, start: number, end: number, key: number): [key: number, count: number] {
+    let count = 0
 
-    key = Scalar.remap(key, min, max, 0, 1)
+    key = Scalar.remap(key, start, end, 0, 1)
 
     // Multiplier.
     if ((key < 0 && (flags & WrapFlags.BeforeContinue) > 0) || (key > 1 && (flags & WrapFlags.AfterContinue) > 0))
-        multiplier = key > 0 ? Math.ceil(key) - 1 : Math.floor(key)
+        count = key > 0 ? Math.ceil(key) - 1 : Math.floor(key)
 
     // Clamp value.
     if ((key < 0 && (flags & WrapFlags.BeforeClamp) > 0) || (key > 1 && (flags & WrapFlags.AfterClamp) > 0))
@@ -43,7 +43,7 @@ export function wrap(key: number, min: number, max: number, flags: WrapFlags): [
 
     if (!flags && key === 1) key %= 1
 
-    key = Scalar.remap(key, 0, 1, min, max)
+    key = Scalar.remap(key, 0, 1, start, end)
 
-    return [key, multiplier]
+    return [key, count]
 }

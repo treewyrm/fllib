@@ -6,10 +6,12 @@ import GlassMaterial from './glass.js'
 import NebulaMaterial from './nebula.js'
 import NomadMaterial from './nomad.js'
 import SinglePassMaterial from './singlepass.js'
+import AtmosphereMaterial from './atmosphere.js'
+import TwoPassMaterial from './twopass.js'
 import { type InstanceList, type TypeArrayList } from '../../types.js'
 import { findInMap, getResourceId } from '../../hash/index.js'
 
-const types = [SinglePassMaterial, DetailMaterial, NebulaMaterial, NomadMaterial, GlassMaterial] as const
+const types = [SinglePassMaterial, DetailMaterial, NebulaMaterial, NomadMaterial, GlassMaterial, AtmosphereMaterial, TwoPassMaterial] as const
 
 /** Maps types in materials  */
 // type MaterialMap = TypeList<InstanceType<typeof types[number]>>
@@ -72,7 +74,11 @@ export default class MaterialLibrary extends Library<Material> {
             return material as MaterialMap[T]
         }
 
-        throw new RangeError(`Unknown material type: ${value}`)
+        console.warn(`Unknown material type: ${value}`)
+
+        const material = new Material()
+        material.type = value
+        return material as MaterialMap[T]
     }
 
     create(parent: ReadableDirectory, name: string): Material | null {
@@ -106,4 +112,4 @@ export default class MaterialLibrary extends Library<Material> {
     }
 }
 
-export { SinglePassMaterial, DetailMaterial, GlassMaterial, NebulaMaterial, NomadMaterial }
+export { SinglePassMaterial, DetailMaterial, GlassMaterial, NebulaMaterial, NomadMaterial, AtmosphereMaterial, TwoPassMaterial }

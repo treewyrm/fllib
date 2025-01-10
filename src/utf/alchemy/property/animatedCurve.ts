@@ -1,16 +1,18 @@
 import { type BufferReader, type BufferWriter } from '../../../buffer/types.js'
 import { Animation, Scalar, Vector } from '../../../math/index.js'
-import { readVector } from '../../utility.js'
+import { readVector, writeVector } from '../../utility.js'
 import { Easing, ease } from '../easing.js'
 import { type AnimatedProperty } from '../types.js'
 import { wrap, WrapFlags } from '../wrap.js'
 
 type Keyframe<T> = Animation.Keyframe<T>
 
+type Point = Vector.VectorLike
+
 export interface AnimatedCurve {
     defaultValue: number
     flags: WrapFlags
-    keyframes: Keyframe<Vector.VectorLike>[]
+    keyframes: Keyframe<Point>[]
 }
 
 /** Animated curve property (typically used for absolute time). */
@@ -27,11 +29,11 @@ export default class AnimatedCurveProperty implements AnimatedProperty<AnimatedC
 
         if (!first || !last) return defaultValue
         if (first === last) return first.value.x
-        ;[key, count] = wrap(key, first.key, last.key, flags)
+        ;[key, count] = wrap(flags, first.key, last.key, key)
         if (key > last.key) key = first.key
 
-        const [start, end, weight] = Animation.at(keyframes, key)
-        return Scalar.hermite(start.x, start.z, end.x, end.y, weight) + (last.value.x - first.value.x) * count
+        const [{ x: start, z: after }, { x: end, y: before }, weight] = Animation.at(keyframes, key)
+        return Scalar.hermite(start, after, end, before, weight) + (last.value.x - first.value.x) * count
     }
 
     static readonly type = 0x202
@@ -86,7 +88,7 @@ export default class AnimatedCurveProperty implements AnimatedProperty<AnimatedC
         return Scalar.linear(a, b, ease(weight, easing))
     }
 
-    static *readKeyframes(view: BufferReader) {
+    static *readKeyframes(view: BufferReader): Generator<Keyframe<Point>> {
         for (let count = view.readUint16(); count > 0; count--)
             yield {
                 key: view.readFloat32(),
@@ -94,7 +96,7 @@ export default class AnimatedCurveProperty implements AnimatedProperty<AnimatedC
             }
     }
 
-    static *readParameters(view: BufferReader) {
+    static *readParameters(view: BufferReader): Generator<Keyframe<AnimatedCurve>> {
         for (let count = view.readUint8(); count > 0; count--)
             yield {
                 key: view.readFloat32(),
@@ -111,31 +113,29 @@ export default class AnimatedCurveProperty implements AnimatedProperty<AnimatedC
         this.keyframes = [...AnimatedCurveProperty.readParameters(view)]
     }
 
-    write(view: BufferWriter): void {
-        const { keyframes: parameters, easing } = this
+    static writeKeyframes(view: BufferWriter, keyframes: Keyframe<Point>[]): void {
+        view.writeUint16(keyframes.length)
 
-        view.writeUint8(easing)
+        for (const { key, value } of keyframes) {
+            view.writeFloat32(key)
+            writeVector(view, value)
+        }
+    }
+
+    static writeParameters(view: BufferWriter, parameters: Keyframe<AnimatedCurve>[]): void {
         view.writeUint8(parameters.length)
 
-        for (const {
-            key,
-            value: { defaultValue, flags, keyframes },
-        } of parameters) {
+        for (const { key, value: { defaultValue, flags, keyframes } } of parameters) {
             view.writeFloat32(key)
-            view.writeFloat32(defaultValue ?? 0)
+            view.writeFloat32(defaultValue)
             view.writeUint16(flags)
-            view.writeUint16(keyframes.length)
-
-            for (const {
-                key,
-                value: { x, y, z },
-            } of keyframes) {
-                view.writeFloat32(key)
-                view.writeFloat32(x)
-                view.writeFloat32(y)
-                view.writeFloat32(z)
-            }
+            this.writeKeyframes(view, keyframes)
         }
+    }
+
+    write(view: BufferWriter): void {
+        view.writeUint8(this.easing)
+        AnimatedCurveProperty.writeParameters(view, this.keyframes)
     }
 
     toJSON() {

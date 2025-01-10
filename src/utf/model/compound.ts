@@ -18,6 +18,9 @@ function* listHardpoints<T extends Part>({ parts }: Compound<T>) {
         for (const [name, hardpoint] of parent.part.hardpoints.objects()) yield [name, hardpoint, parent] as const
 }
 
+const getFragmentFilename = (name: string, date = new Date()) =>
+    `${name}${date.getFullYear()}${date.getMonth()}${date.getDate()}${date.getHours()}${date.getMinutes()}${date.getSeconds()}.3db`
+
 /** Compound model hierarchy element. */
 export default class Compound<T extends Part> extends Set<Compound<T>> implements WritesDirectory {
     readonly kind = 'directory'
@@ -32,7 +35,7 @@ export default class Compound<T extends Part> extends Set<Compound<T>> implement
     name = ''
 
     /** Index. */
-    index = 0
+    index?: number
 
     /** Filename. */
     filename = ''
@@ -105,22 +108,24 @@ export default class Compound<T extends Part> extends Set<Compound<T>> implement
                 case 'root':
                     isRoot = true
                 case 'part':
-                    const [filename = ''] = directory.getFile('File name')?.readStrings() ?? []
-                    // const scale = parseFloat(directory.getFile('Scale')?.text ?? '1') // Appears in deformable, seems unused.
+                    const objectname = directory.getFile('Object name')?.readString()
+                    if (!objectname) throw new Error(`Missing compound object name in ${name}`)
 
-                    if (!filename.length) throw new Error(`Missing file name in ${name}`)
+                    const filename = directory.getFile('File name')?.readString()
+                    if (!filename) throw new Error(`Missing compound object file name in ${name}`)
+
+                    const index = directory.getFile('Index')?.readInteger() ?? 0
 
                     // Find fragment folder for part.
                     const fragment = parent.getDirectory(filename)
-                    if (!fragment) throw new Error(`Missing fragment ${filename} in ${name}`)
+                    if (!fragment) throw new Error(`Missing compound object fragment ${filename} for ${name}`)
 
                     const part = new Compound(loadPart(fragment), new DefaultJoint())
+
                     part.filename = filename
+                    part.index = index
+                    part.name = objectname
 
-                    ;[part.index = 0] = directory.getFile('Index')?.readIntegers() ?? []
-                    ;[part.name = ''] = directory.getFile('Object name')?.readStrings() ?? []
-
-                    if (!part.name.length) throw new Error(`Missing object name in ${name}`)
                     if (isRoot) root = part
 
                     parts.push(part)
@@ -166,7 +171,7 @@ export default class Compound<T extends Part> extends Set<Compound<T>> implement
         return root
     }
 
-    write(parent: WritableDirectory): void {
+    write(parent: WritableDirectory, root = 'root'): void {
         /** Compound directory. */
         const compound = parent.setDirectory('Cmpnd')
 
@@ -175,18 +180,22 @@ export default class Compound<T extends Part> extends Set<Compound<T>> implement
 
         /** Unique object names. */
         const names = new Set<string>()
-        const indices = new Set<number>()
+        const indices: number[] = []
 
         for (const [element] of this.parts) {
-            const { name, filename, index, part } = element
+            const {
+                name,
+                filename = getFragmentFilename(name === this.name ? root : name),
+                index = Math.max(0, ...indices) + 1,
+                part,
+            } = element
 
-            if (!name.length) throw new RangeError('Compound part has empty object name')
-            if (!filename.length) throw new RangeError('Compound part has empty file name')
+            if (!name.length) throw new RangeError(`Compound part has empty object name`)
             if (names.has(name)) throw new Error(`Duplicate compound part name: ${name}`)
-            if (!Number.isInteger(index)) throw new RangeError(`Non-integer compound part index.`)
-            if (indices.has(index)) throw new RangeError(`Duplicate compound part index: ${index}`)
-            
+            if (!Number.isInteger(index)) throw new RangeError(`Non-integer compound part index in ${name}`)
+
             names.add(name)
+            indices.push(index)
 
             const directory = compound.setDirectory(name === this.name ? 'Root' : `Part_${name}`)
 

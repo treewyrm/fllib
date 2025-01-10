@@ -93,6 +93,11 @@ export default class File implements ReadableFile, WritableFile {
                   : view.readInt8()
     }
 
+    readInteger(): number | undefined {
+        const [value] = this.readIntegers()
+        return value
+    }
+
     /**
      * Writes sequence of 32-bit integers into file.
      * Overrides existing data.
@@ -113,6 +118,11 @@ export default class File implements ReadableFile, WritableFile {
         while (view.byteRemain >= Float32Array.BYTES_PER_ELEMENT) yield view.readFloat32()
     }
 
+    readFloat(): number | undefined {
+        const [value] = this.readFloats()
+        return value
+    }
+
     /**
      * Writes float numbers into file.
      * Overrides existing data.
@@ -131,6 +141,11 @@ export default class File implements ReadableFile, WritableFile {
     *readStrings(): Generator<string> {
         const { view } = this
         while (view.byteRemain) yield view.readZString()
+    }
+
+    readString(): string | undefined {
+        const [value] = this.readStrings()
+        return value
     }
 
     /**
