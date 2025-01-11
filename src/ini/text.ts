@@ -18,10 +18,10 @@ export function* read(strings: Iterable<string>): Generator<Section> {
     let comment: string
     let name: string
     let value: string
-    let count = 0
+    let position = 0
 
     for (let string of strings) {
-        count++
+        position++
 
         ;[string = '', comment = ''] = string.trim().split(CommentDelimiter, 2)
         string = string.trim()
@@ -33,10 +33,12 @@ export function* read(strings: Iterable<string>): Generator<Section> {
             section = undefined
 
             if (string.at(-1) === SectionEnd) {
-                name = string.substring(1, string.length - 1).trim()
-                section = new Section(name)
-                section.position = count
-                section.comment = comment
+                section = {
+                    name: string.substring(1, string.length - 1).trim(),
+                    properties: [],
+                    position,
+                    comment
+                }
 
                 continue
             }
@@ -48,9 +50,12 @@ export function* read(strings: Iterable<string>): Generator<Section> {
         // Split line into name and values.
         ;[name = '', value = 'true'] = string.split(AssignmentDelimiter, 2).map((value) => value.trim())
 
-        property = new Property(name, value.split(ValueSeparator).map((value) => value.trim()))
-        property.position = count
-        property.comment = comment
+        property = {
+            name,
+            values: value.split(ValueSeparator).map((value) => value.trim()),
+            position,
+            comment
+        }
 
         section.properties.push(property)
     }

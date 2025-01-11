@@ -1,9 +1,8 @@
 import { concat } from '../buffer/utility.js'
 import Dictionary from '../buffer/dictionary.js'
 import BufferView from '../buffer/view.js'
-import Property from './property.js'
-import Section from './section.js'
-import Value from './value.js'
+import type Section from './section.js'
+import type Value from './value.js'
 import { BufferReader, BufferWriter } from '../buffer/types.js'
 
 enum Type {
@@ -50,27 +49,34 @@ export function* read(input: Uint8Array): Generator<Section> {
 
     /**
      * Read string from dictionary.
-     * @param offset 
+     * @param start 
      * @returns 
      */
-    const readString = (offset: number): string => {
-        const index = dictionary.indexOf(0, offset)
-        if (index < 0) throw new RangeError(`String offset ${offset} is out of range`)
+    const readString = (start: number): string => {
+        const end = dictionary.indexOf(0, start)
+        if (end < 0) throw new RangeError(`String offset ${start} is out of range`)
 
-        return decoder.decode(dictionary.subarray(offset, offset + index))
+        return decoder.decode(dictionary.subarray(start, end))
     }
 
     let name: string
     let section: Section
     let values: Value[]
+    let position: number
 
     // Read sections.
     while (view.offset < nameOffset) {
+        position = view.offset
         name = readString(view.readUint16())
-        section = new Section(name)
+        section = {
+            name,
+            properties: [],
+            position
+        }
 
         // Read section properties.
         for (let index = 0, length = view.readUint16(); index < length; index++) {
+            position = view.offset
             name = readString(view.readUint16())
             values = []
 
@@ -94,7 +100,11 @@ export function* read(input: Uint8Array): Generator<Section> {
                 }
             }
 
-            section.properties.push(new Property(name, values))
+            section.properties.push({
+                name,
+                values,
+                position 
+            })
         }
 
         yield section
@@ -189,5 +199,5 @@ export function write(sections: Iterable<Section>): Uint8Array {
         }
     }
 
-    return concat(header, body, names, texts)
+    return concat(header, body, ...names.chunks, ...texts.chunks)
 }
