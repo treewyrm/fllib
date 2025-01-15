@@ -1,4 +1,4 @@
-import { getObjectId, type Hashable } from '../hash/index.js'
+import { getObjectId } from '../hash/index.js'
 import Property from './property.js'
 
 /**

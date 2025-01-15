@@ -100,7 +100,7 @@ export const cast = <T extends Type>(value: unknown, type: T): TypeValue<T> => {
 
 /**
  * Cast values to specific types.
- * Last type listed will be used for rest values.
+ * Last type listed will be used for remaining values in property.
  * @param values Sequence of input values
  * @param types Sequence of desired output types
  * @returns

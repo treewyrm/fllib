@@ -8,70 +8,71 @@ const SectionStart = '['
 const SectionEnd = ']'
 
 /**
- * Parse strings into sections, properties and values.
- * @param strings Text lines
+ * Reads lines into INI sections.
+ * @param lines
+ * @returns
  */
-export function* read(strings: Iterable<string>): Generator<Section> {
+export function* read(lines: Iterable<string>): Generator<Section> {
     let section: Section | undefined
-    let property: Property | undefined
-
-    let comment: string
-    let name: string
-    let value: string
+    let comment: string | undefined
     let position = 0
+    let name = ''
+    let value = ''
 
-    for (let string of strings) {
+    for (let line of lines) {
         position++
+        ;[line = '', comment] = line.trim().split(CommentDelimiter, 2)
+        line = line.trim()
 
-        ;[string = '', comment = ''] = string.trim().split(CommentDelimiter, 2)
-        string = string.trim()
+        if (!comment?.length) comment = undefined
 
-        if (!string.length) continue
+        if (!line.length) continue
 
-        if (string.at(0) === SectionStart) {
+        if (line.at(0) === SectionStart) {
             if (section) yield section
             section = undefined
 
-            if (string.at(-1) === SectionEnd) {
+            if (line.at(-1) === SectionEnd)
                 section = {
-                    name: string.substring(1, string.length - 1).trim(),
+                    name: line.substring(1, line.length - 1).trim(),
                     properties: [],
                     position,
-                    comment
+                    comment,
                 }
 
-                continue
-            }
+            continue
         }
 
         // Ignore lines outside sections.
-        if (!section) continue
+        if (!section)
+            continue
 
-        // Split line into name and values.
-        ;[name = '', value = 'true'] = string.split(AssignmentDelimiter, 2).map((value) => value.trim())
+            // Split line into name and values.
+        ;[name = '', value = ''] = line.split(AssignmentDelimiter, 2).map((value) => value.trim())
 
-        property = {
+        section.properties.push({
             name,
-            values: value.split(ValueSeparator).map((value) => value.trim()),
+            values: value.length > 0 ? value.split(ValueSeparator).map((value) => value.trim()) : [],
             position,
-            comment
-        }
-
-        section.properties.push(property)
+            comment,
+        })
     }
 
     if (section) yield section
 }
 
+function* writeProperties(properties: Iterable<Property>, comments = false): Generator<string> {
+    for (const { name, values, comment } of properties)
+        yield `${name} = ${values.join(', ')}${comments && comment ? ` ; ${comment}` : ''}`
+}
+
 /**
  * Convert sections and properties into text lines.
- * @param sections 
+ * @param sections
  */
 export function* write(sections: Iterable<Section>, comments = false): Generator<string> {
     for (const { name, properties, comment } of sections) {
         yield `[${name}]${comments && comment ? ` ; ${comment}` : ''}`
-
-        for (const { name, values, comment } of properties)
-            yield `${name} = ${values.join(',')}${comments && comment ? ` ; ${comment}` : ''}`
+        yield* writeProperties(properties, comments)
     }
 }

@@ -1,27 +1,52 @@
-import { strictEqual, notStrictEqual } from 'node:assert'
+import { deepStrictEqual } from 'node:assert'
 import { describe, it } from 'node:test'
-import { read } from './text.js'
+import { read, write } from './text.js'
+import Section from './section.js'
+import { clear, stringify } from './index.js'
 
-describe('Text INI', () => {
-    it('Reading', () => {
-        const lines = `
-[SectionA]
-propertyA = hello, 12345, 0.15
-propertyA = also hello, 12,
-propertyB
-propertyC = 10, 20, 30, 40
+const sections: Section[] = [
+    {
+        name: 'SectionA',
+        properties: [
+            {
+                name: 'PropertyA',
+                values: ['hello', 12345, 0.15],
+            },
+            {
+                name: 'PropertyA',
+                values: ['also hello', 12],
+            },
+            {
+                name: 'PropertyB',
+                values: [],
+            },
+            {
+                name: 'PropertyC',
+                values: [10, 20, 30, 40],
+            },
+        ],
+    },
+    {
+        name: 'SectionB',
+        properties: [],
+    },
+    {
+        name: 'SectionC',
+        properties: [
+            {
+                name: 'prop',
+                values: ['something'],
+            },
+        ],
+    },
+]
 
-[SectionB]
-        `.split('\n')
+describe('Writing text INI', () => {
+    const lines = [...write(sections)]
 
-        const [sectionA, sectionB] = Array.from(read(lines))
+    describe('Reading text INI', () => {
+        const result = [...read(lines)]
 
-        notStrictEqual(sectionA, undefined)
-        strictEqual(sectionA!.name, 'SectionA')
-        strictEqual(sectionA!.properties.length, 4)
-
-        notStrictEqual(sectionB, undefined)
-        strictEqual(sectionB!.name, 'SectionB')
-        strictEqual(sectionB!.properties.length, 0)
+        it('Read result matches written', () => deepStrictEqual(clear(result), stringify(sections)))
     })
 })

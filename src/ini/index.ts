@@ -1,6 +1,7 @@
 import { getObjectId, type Hashable } from '../hash/index.js'
 import type Section from './section.js'
 import { objectId } from './section.js'
+import { toString } from './value.js'
 
 export * as Value from './value.js'
 export * as Binary from './binary.js'
@@ -16,9 +17,19 @@ export function* find(sections: Iterable<Section>, nickname: Hashable): Generato
     for (const section of sections) if (objectId(section) === nickname) yield section
 }
 
-/** Clear sections/properties from position/comments. */
+/**
+ * Removes position/comments from sections and properties.
+ * @param sections 
+ * @returns 
+ */
 export const clear = (sections: Section[]) =>
     sections.map(({ name, properties }) => ({
         name,
         properties: properties.map(({ name, values }) => ({ name, values })),
+    }))
+ 
+export const stringify = (sections: Section[]) =>
+    sections.map(({ name, properties }) => ({
+        name,
+        properties: properties.map(({ name, values }) => ({ name, values: values.map(toString) }))
     }))

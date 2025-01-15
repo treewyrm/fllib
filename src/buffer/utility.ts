@@ -1,4 +1,7 @@
-import { type Readable, type Writable } from './types.js'
+import { type BufferReader, type BufferWriter, type Readable, type Writable } from './types.js'
+import { type VectorLike } from '../math/vector.js'
+import { type MatrixLike } from '../math/matrix.js'
+import { type QuaternionLike } from '../math/quaternion.js'
 import BufferView, { isWritable } from './view.js'
 
 interface HasByteLength {
@@ -7,14 +10,15 @@ interface HasByteLength {
 
 /**
  * Total byte length of objects.
- * @param values 
- * @returns 
+ * @param values
+ * @returns
  */
-export const getByteLength = (...values: HasByteLength[]): number => values.reduce((total, { byteLength = 0 }) => total + byteLength, 0)
+export const getByteLength = (...values: HasByteLength[]): number =>
+    values.reduce((total, { byteLength = 0 }) => total + byteLength, 0)
 
 /**
  * Writes into buffer chunks.
- * @param values 
+ * @param values
  */
 export function* writeBuffers(values: Iterable<Writable>): Generator<ArrayBuffer> {
     for (const value of values) {
@@ -28,8 +32,8 @@ export type NextReadable<T extends Readable> = (index: number, byteOffset: numbe
 
 /**
  * Reads view into readable objects.
- * @param array 
- * @param next 
+ * @param array
+ * @param next
  */
 export function* readBuffers<T extends Readable>(array: ArrayBufferView, next: NextReadable<T>): Generator<T> {
     let index = 0
@@ -90,4 +94,48 @@ export function* split(input: Uint8Array, separator: number, limit = Infinity, o
         offset = index + 1
         limit--
     }
+}
+
+/** Reads vector from buffer (3x float32). */
+export const readVector = (view: BufferReader): VectorLike => ({
+    x: view.readFloat32(),
+    y: view.readFloat32(),
+    z: view.readFloat32(),
+})
+
+/** Writes vector into buffer (3x float32). */
+export const writeVector = (view: BufferWriter, { x, y, z }: VectorLike): void => {
+    view.writeFloat32(x)
+    view.writeFloat32(y)
+    view.writeFloat32(z)
+}
+
+/** Reads quaternion from buffer (4x float32). */
+export const readQuaternion = (view: BufferReader): QuaternionLike => ({
+    w: view.readFloat32(),
+    x: view.readFloat32(),
+    y: view.readFloat32(),
+    z: view.readFloat32(),
+})
+
+/** Writes quaternion into buffer (4x float32). */
+export const writeQuaternion = (view: BufferWriter, { w, x, y, z }: QuaternionLike): void => {
+    view.writeFloat32(w)
+    view.writeFloat32(x)
+    view.writeFloat32(y)
+    view.writeFloat32(z)
+}
+
+/** Reads matrix from buffer (9x float32). */
+export const readMatrix = (view: BufferReader): MatrixLike => ({
+    x: readVector(view),
+    y: readVector(view),
+    z: readVector(view),
+})
+
+/** Writes matrix into buffer (9x float32). */
+export const writeMatrix = (view: BufferWriter, { x, y, z }: MatrixLike): void => {
+    writeVector(view, x)
+    writeVector(view, y)
+    writeVector(view, z)
 }

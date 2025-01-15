@@ -43,10 +43,14 @@ describe('Type casting', () => {
     })
 
     describe('Formatting values', () => {
-        const values: Value[] = ['object_name', true, 8000, Math.SQRT2, -100.998, 1.1]
+        const values1: Value[] = ['object_name', true, 8000, Math.SQRT2, -100.998, 1.1]
+
+        const values2: Value[] = ['text', true, 100, 1000, 10000]
+
+        const values3: Value[] = ['value', true]
 
         it('Matching types', () =>
-            deepStrictEqual(format(values, 'string', 'boolean', 'integer', 'float', 'float', 'float'), [
+            deepStrictEqual(format(values1, 'string', 'boolean', 'integer', 'float', 'float', 'float'), [
                 'object_name',
                 true,
                 8000,
@@ -54,5 +58,12 @@ describe('Type casting', () => {
                 Math.fround(-100.998),
                 Math.fround(1.1),
             ]))
+
+        it('Matching remaining types', () =>
+            deepStrictEqual(format(values2, 'string', 'boolean', 'integer'), ['text', true, 100, 1000, 10000]))
+
+        // Undefined becomes whatever default is type cast into.
+        it('Exceeding values', () =>
+            deepStrictEqual(format(values3, 'string', 'boolean', 'integer'), ['value', true, 0]))
     })
 })
