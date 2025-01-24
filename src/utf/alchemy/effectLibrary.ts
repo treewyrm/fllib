@@ -7,9 +7,6 @@ export default class EffectLibrary extends Map<string, Effect> implements ReadsD
     readonly filename = 'ALEffectLib'
     readonly kind = 'directory'
 
-    /** Is it four floats? This appears to be the only difference between version 1.0 and 1.1. */
-    unknown = [0, 0, 0, 0]
-
     constructor(public version = 1.1) {
         super()
     }
@@ -55,17 +52,11 @@ export default class EffectLibrary extends Map<string, Effect> implements ReadsD
 
         for (let i = 0, count = view.readInt32(); i < count; i++) {
             const name = readString(view)
-
-            if (this.version > 1) {
-                this.unknown[0] = view.readFloat32()
-                this.unknown[1] = view.readFloat32()
-                this.unknown[2] = view.readFloat32()
-                this.unknown[3] = view.readFloat32()
-            }
-
             const effect = new Effect()
 
+            if (this.version > 1) effect.readHeader(view)
             effect.read(view)
+
             this.set(name, effect)
         }
     }
@@ -82,13 +73,7 @@ export default class EffectLibrary extends Map<string, Effect> implements ReadsD
         for (const [name, effect] of this) {
             writeString(view, name)
 
-            if (this.version > 1) {
-                view.writeFloat32(this.unknown[0] ?? 0)
-                view.writeFloat32(this.unknown[1] ?? 0)
-                view.writeFloat32(this.unknown[2] ?? 0)
-                view.writeFloat32(this.unknown[3] ?? 0)
-            }
-
+            if (this.version > 1) effect.writeHeader(view)
             effect.write(view)
         }
     }

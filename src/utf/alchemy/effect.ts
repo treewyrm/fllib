@@ -18,6 +18,11 @@ export default class Effect extends Set<NodeInstance> implements Readable, Writa
     /** Special parentId value indicating no parent node (i.e. world space). */
     static readonly WorldId = 0x8000
 
+    unknown0 = 0
+    unknown1 = 0
+    unknown2 = 0
+    unknown3 = 0
+
     get byteLength(): number {
         return (
             Uint32Array.BYTES_PER_ELEMENT + // Instance count.
@@ -45,26 +50,48 @@ export default class Effect extends Set<NodeInstance> implements Readable, Writa
         return
     }
 
+    readHeader(view: BufferReader): void {
+        this.unknown0 = view.readFloat32()
+        this.unknown1 = view.readFloat32()
+        this.unknown2 = view.readFloat32()
+        this.unknown3 = view.readFloat32()
+    }
+
+    writeHeader(view: BufferWriter): void {
+        view.writeFloat32(this.unknown0)
+        view.writeFloat32(this.unknown1)
+        view.writeFloat32(this.unknown2)
+        view.writeFloat32(this.unknown3)
+    }
+
     read(view: BufferReader): void {
         const entries = new Array<Entry>(view.readInt32())
 
         // Load entries.
-        for (let i = 0; i < entries.length; i++)
+        for (let i = 0; i < entries.length; i++) {
+            if (view.byteRemain < 4 * Int32Array.BYTES_PER_ELEMENT)
+                throw new RangeError(`Effect node instance ${i} is out of range`)
+
             entries[i] = {
                 flags: view.readInt32(),
                 nodeId: view.readInt32(),
                 parentId: view.readInt32(),
                 childId: view.readInt32(),
             }
+        }
 
         const pairs = new Array<Pair>(view.readInt32())
 
         // Load pairs.
-        for (let i = 0; i < pairs.length; i++)
+        for (let i = 0; i < pairs.length; i++) {
+            if (view.byteRemain < 2 * Int32Array.BYTES_PER_ELEMENT)
+                throw new RangeError(`Effect node instance tuple ${i} is out of range`)
+
             pairs[i] = {
                 sourceId: view.readInt32(),
                 targetId: view.readInt32(),
             }
+        }
 
         // Expand list of entires into hierarchy of node instances and link
         const instances = assemble<Entry, NodeInstance>(
@@ -138,8 +165,6 @@ export default class Effect extends Set<NodeInstance> implements Readable, Writa
     }
 
     toJSON() {
-        return [
-            ...this.values()
-        ]
+        return [...this.values()]
     }
 }
