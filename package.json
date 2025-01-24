@@ -26,6 +26,7 @@
     "./hash": "./dist/hash/index.js",
     "./math": "./dist/math/index.js",
     "./ini": "./dist/ini/index.js",
+    "./info": "./dist/infocard.js",
     "./utf": "./dist/utf/index.js",
     "./utf/model": "./dist/utf/model/index.js",
     "./utf/vmesh": "./dist/utf/vmesh/index.js",
