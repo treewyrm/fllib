@@ -3,13 +3,13 @@ import Dictionary from '../buffer/dictionary.js'
 import BufferView from '../buffer/view.js'
 import type Section from './section.js'
 import type Value from './value.js'
-import { BufferReader, BufferWriter } from '../buffer/types.js'
+import { type BufferReader, type BufferWriter } from '../buffer/types.js'
 
 enum Type {
-    BOOL,
-    INTEGER,
-    FLOAT,
-    STRING,
+    Bool,
+    Integer,
+    Float,
+    String,
 }
 
 class Header {
@@ -49,8 +49,8 @@ export function* read(input: Uint8Array): Generator<Section> {
 
     /**
      * Read string from dictionary.
-     * @param start 
-     * @returns 
+     * @param start
+     * @returns
      */
     const readString = (start: number): string => {
         const end = dictionary.indexOf(0, start)
@@ -71,7 +71,7 @@ export function* read(input: Uint8Array): Generator<Section> {
         section = {
             name,
             properties: [],
-            position
+            position,
         }
 
         // Read section properties.
@@ -83,16 +83,16 @@ export function* read(input: Uint8Array): Generator<Section> {
             // Read property values.
             for (let index = 0, length = view.readUint8(); index < length; index++) {
                 switch (view.readUint8()) {
-                    case Type.BOOL:
+                    case Type.Bool:
                         values[index] = view.readUint32() > 0
                         break
-                    case Type.INTEGER:
+                    case Type.Integer:
                         values[index] = view.readInt32()
                         break
-                    case Type.FLOAT:
+                    case Type.Float:
                         values[index] = view.readFloat32()
                         break
-                    case Type.STRING:
+                    case Type.String:
                         values[index] = readString(view.readUint32())
                         break
                     default:
@@ -103,7 +103,7 @@ export function* read(input: Uint8Array): Generator<Section> {
             section.properties.push({
                 name,
                 values,
-                position 
+                position,
             })
         }
 
@@ -124,6 +124,23 @@ type Record = {
         values: Value[]
     }[]
 }
+
+/**
+ * Calculate BINI record byte length.
+ * @param record 
+ * @returns 
+ */
+const getRecordByteLength = ({ properties }: Record) =>
+    Uint16Array.BYTES_PER_ELEMENT +
+    Uint16Array.BYTES_PER_ELEMENT +
+    properties.reduce(
+        (total, { values }) =>
+            total +
+            Uint16Array.BYTES_PER_ELEMENT +
+            Uint8Array.BYTES_PER_ELEMENT +
+            values.length * (Uint8Array.BYTES_PER_ELEMENT + Uint32Array.BYTES_PER_ELEMENT),
+        0
+    )
 
 /**
  * Write sections into BINI.
@@ -151,13 +168,7 @@ export function write(sections: Iterable<Section>): Uint8Array {
     }
 
     // Allocate body list.
-    const body = BufferView.from(
-        records.reduce(
-            (total, { properties }) =>
-                total + 4 + properties.reduce((total, { values }) => total + 3 + values.length * 5, 0),
-            0
-        )
-    )
+    const body = BufferView.from(records.reduce((total, record) => total + getRecordByteLength(record), 0))
 
     header.nameOffset = header.byteLength + body.byteLength
 
@@ -172,23 +183,23 @@ export function write(sections: Iterable<Section>): Uint8Array {
             for (const value of values) {
                 switch (typeof value) {
                     case 'boolean':
-                        body.writeUint8(Type.BOOL)
+                        body.writeUint8(Type.Bool)
                         body.writeUint32(value ? 0x8000000 : 0)
 
                         break
                     case 'number':
                         if (Number.isSafeInteger(value)) {
-                            body.writeUint8(Type.INTEGER)
+                            body.writeUint8(Type.Integer)
                             body.writeInt32(value)
                             break
                         }
 
-                        body.writeUint8(Type.FLOAT)
+                        body.writeUint8(Type.Float)
                         body.writeFloat32(value)
 
                         break
                     case 'string':
-                        body.writeUint8(Type.STRING)
+                        body.writeUint8(Type.String)
                         body.writeUint32(names.byteLength + texts.push(value)[0])
 
                         break
@@ -199,5 +210,5 @@ export function write(sections: Iterable<Section>): Uint8Array {
         }
     }
 
-    return concat(header, body, ...names.chunks, ...texts.chunks)
+    return concat(header, body, names.buffer, texts.buffer)
 }

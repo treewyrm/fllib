@@ -61,7 +61,15 @@ export function* read(lines: Iterable<string>): Generator<Section> {
     if (section) yield section
 }
 
-function* writeProperties(properties: Iterable<Property>, comments = false): Generator<string> {
+type TextOptions = {
+    emptyLineBetweenSections?: boolean
+    comments?: boolean
+    lowercase?: boolean
+}
+
+function* writeProperties(properties: Iterable<Property>, options?: TextOptions): Generator<string> {
+    const { comments = false } = options ?? {}
+
     for (const { name, values, comment } of properties)
         yield `${name} = ${values.join(', ')}${comments && comment ? ` ; ${comment}` : ''}`
 }
@@ -70,9 +78,12 @@ function* writeProperties(properties: Iterable<Property>, comments = false): Gen
  * Convert sections and properties into text lines.
  * @param sections
  */
-export function* write(sections: Iterable<Section>, comments = false): Generator<string> {
+export function* write(sections: Iterable<Section>, options?: TextOptions): Generator<string> {
+    const { comments = false, emptyLineBetweenSections = true } = options ?? {}
+
     for (const { name, properties, comment } of sections) {
         yield `[${name}]${comments && comment ? ` ; ${comment}` : ''}`
-        yield* writeProperties(properties, comments)
+        yield* writeProperties(properties, options)
+        if (emptyLineBetweenSections) yield ''
     }
 }

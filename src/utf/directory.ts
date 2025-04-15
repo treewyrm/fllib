@@ -32,6 +32,7 @@ export type DirectoryJSON = {
     children: (DirectoryJSON | FileJSON)[]
 }
 
+/** UTF directory entry. */
 export default class Directory extends ResourceMap<Entry> implements ReadableDirectory, WritableDirectory {
     get [Symbol.toStringTag]() {
         return 'Directory'

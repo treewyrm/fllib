@@ -157,18 +157,21 @@ type PEHeader = {
     characteristics: number
 }
 
-function readPEHeader(view: BufferView): PEHeader {
-    return {
-        fourCC: view.readUint32(),
-        machine: view.readUint16(),
-        numberOfSections: view.readUint16(),
-        timeDateStamp: view.readUint32(),
-        pointerToSymbols: view.readUint32(),
-        numberOfSymbols: view.readUint32(),
-        sizeOfOptionalHeader: view.readUint16(),
-        characteristics: view.readUint16(),
-    }
-}
+/**
+ * Reads portable header.
+ * @param view 
+ * @returns 
+ */
+const readPEHeader = (view: BufferView): PEHeader => ({
+    fourCC: view.readUint32(),
+    machine: view.readUint16(),
+    numberOfSections: view.readUint16(),
+    timeDateStamp: view.readUint32(),
+    pointerToSymbols: view.readUint32(),
+    numberOfSymbols: view.readUint32(),
+    sizeOfOptionalHeader: view.readUint16(),
+    characteristics: view.readUint16(),
+})
 
 /** Text strings, typically referenced by `ids_name`. */
 export const names = new Map<number, string>()
@@ -189,7 +192,7 @@ export function reset() {
 }
 
 /**
- * Load text and html resources from DLL.
+ * Loads text and html resources from DLL.
  *
  * Original game sequence of resources:
  * - resources.dll (implicitly loaded first)

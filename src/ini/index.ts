@@ -1,11 +1,13 @@
 import { getObjectId, type Hashable } from '../hash/index.js'
 import type Section from './section.js'
+import type Property from './property.js'
 import { objectId } from './section.js'
 import { toString } from './value.js'
 
 export * as Value from './value.js'
 export * as Binary from './binary.js'
 export * as Text from './text.js'
+export { type Section, type Property }
 
 /**
  * Find all sections with matching object id (from hashed `nickname` property)

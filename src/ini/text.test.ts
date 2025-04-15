@@ -44,7 +44,7 @@ const sections: Section[] = [
 describe('Writing text INI', () => {
     const lines = [...write(sections)]
 
-    describe('Reading text INI', () => {
+    describe('Reading text INI', async () => {
         const result = [...read(lines)]
 
         it('Read result matches written', () => deepStrictEqual(clear(result), stringify(sections)))
