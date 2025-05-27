@@ -1,6 +1,6 @@
 import { findByResourceId, type Hashable } from '../../hash/index.js'
 import { recurse } from '../../utility.js'
-import Directory, { type ReadFromDirectory } from '../directory.js'
+import { type ReadFromDirectory } from '../directory.js'
 import { type WritableDirectory, WritesDirectory, type ReadableDirectory } from '../types.js'
 import { Constraint, ConstraintList, type Joint } from './constraint.js'
 import DefaultJoint from './joint/loose.js'
@@ -204,11 +204,16 @@ export default class Compound<T extends Part> extends Set<Compound<T>> implement
             directory.setFile('Index').writeIntegers(index)
 
             for (const { joint, name } of element) constraints.add(new Constraint(joint, element.name, name))
+            
+            parent.delete(filename)
 
-            const fragment = new Directory()
+            const fragment = parent.setDirectory(filename)
             part.write(fragment)
 
-            parent.adopt([filename, fragment])
+            // const fragment = new Directory()
+            // part.write(fragment)
+
+            // parent.adopt([filename, fragment])
         }
 
         // Write constraint list.

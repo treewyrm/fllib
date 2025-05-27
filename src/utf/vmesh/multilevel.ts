@@ -24,11 +24,11 @@ export default class MultiLevel {
 
     read(parent: ReadableDirectory) {
         this.levels = []
-        this.ranges = [...(parent.getFile(Switch2)?.readFloats() ?? [0])]
+        this.ranges = [...(parent.getFile(Switch2)?.readFloats() ?? [0, 1000])]
 
-        for (let index = 0; index < this.ranges.length - 1; index++) {
+        for (let index = 0; ; index++) {
             const level = parent.getDirectory(`Level${index}`)
-            if (!level) throw new RangeError(`Missing level ${index}.`)
+            if (!level) break
 
             const part = level.read(new VMeshPart())
             if (!part) throw new Error(`Missing part in level ${index}`)

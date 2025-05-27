@@ -28,7 +28,7 @@ export function* recurse<T>(input: Iterable<T>, recurse: (parent: T) => Iterable
     }
 }
 
-type Step<T> = {
+interface FlattenResult<T> {
     /** Depth level. */
     depth: number
 
@@ -51,14 +51,14 @@ type Step<T> = {
  * @param iterate Callback upon current iteration to feed the queue
  * @param count Start index
  */
-export function* flatten<T>(input: Iterable<T>, iterate: (parent: T) => Iterable<T>, count = 0): Generator<Step<T>> {
-    const queue: Step<T>[] = [...input].map((value) => ({
+export function* flatten<T>(input: Iterable<T>, iterate: (parent: T) => Iterable<T>, count = 0): Generator<FlattenResult<T>> {
+    const queue: FlattenResult<T>[] = [...input].map((value) => ({
         childId: count++,
         child: value,
         depth: 0,
     }))
 
-    let item: Step<T> | undefined
+    let item: FlattenResult<T> | undefined
 
     while ((item = queue.shift())) {
         const { childId: parentId, child: parent, depth } = item
@@ -78,7 +78,7 @@ export function* flatten<T>(input: Iterable<T>, iterate: (parent: T) => Iterable
 
 type TransformCallback<T, V> = (value: T, index: number, array: T[]) => { childId: number; parentId?: number; child: V }
 
-type PairValue<V> = {
+interface PairValue<V> {
     childId: number
     child: V
     parentId?: number
